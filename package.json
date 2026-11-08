@@ -1,0 +1,25 @@
+{
+  "name": "retro-vinyl-tape-player",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "复古唱片机 & 磁带录音机拟物音乐播放器（Vue3 + Vite + Pinia + TailwindCSS + GSAP）",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host",
+    "gen:audio": "python scripts/make-demo-audio.py"
+  },
+  "dependencies": {
+    "gsap": "^3.12.5",
+    "pinia": "^2.2.6",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "vite": "^6.0.7"
+  }
+}

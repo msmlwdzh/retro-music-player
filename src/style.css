@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   全局基础 —— 手绘丝网印海报（Hand-drawn Screenprint）
+   ------------------------------------------------------------
+   规则：
+     · 页面地：由 HandDrawnBg.vue 的三段天幕（青蓝 → 品红 → 正红）铺底，
+       这里只留同色兜底，避免首屏闪白。
+     · 卡片 / 机身：品红纸面 + 墨青黑粗描边，靠"印"上去的硬边影分层。
+     · 圆角统一 12px；面板额外用不规则圆角模拟手绘线的抖动。
+     · 过渡只作用于颜色类属性，transform / opacity 交给 GSAP 独占。
+   ============================================================ */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    /* 兜底：与背景 SVG 同向的三段色，首屏 SVG 未及时绘制时也不会闪白 */
+    background:
+      linear-gradient(180deg, #8fe7f2 0%, #5fd8e8 26%, #f087b0 56%, #e8449b 76%, #a81422 100%)
+        fixed;
+    @apply text-ink antialiased;
+    font-family: 'Inter', 'Inter var', system-ui, -apple-system, 'Segoe UI', Roboto,
+      'Helvetica Neue', Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-weight: 400;
+    overscroll-behavior-y: none;
+  }
+
+  /* 只对颜色类属性做过渡：transform / opacity 交给 GSAP 独占，互不打扰 */
+  button,
+  input,
+  textarea,
+  a,
+  .ac-panel,
+  .mech-btn {
+    transition:
+      background-color 0.25s ease,
+      border-color 0.25s ease,
+      color 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  :focus-visible {
+    outline: 2px solid #132a33;
+    outline-offset: 2px;
+  }
+
+  /* 细窄滚动条，配色跟随深玫红 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(140, 27, 87, 0.55) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(140, 27, 87, 0.5);
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(140, 27, 87, 0.75);
+  }
+}
+
+/* ============================================================
+   组件层
+   ============================================================ */
+@layer components {
+  /* ------------------------------------------------------------
+     纸面颗粒：叠在元素之上的一层噪点，模拟油墨印在纸上的粗糙。
+     用 base64 之外的 data-uri SVG 平铺（180px 一格），成本极低。
+     mix-blend-mode: multiply 让颗粒"吃"进底色，不会发灰。
+     ------------------------------------------------------------ */
+  .hd-grain {
+    position: relative;
+  }
+  .hd-grain::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0.16;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 180px 180px;
+  }
+
+  /* ------------------------------------------------------------
+     面板：品红纸面 + 墨青黑粗描边 + 右下硬边印影。
+     圆角用四角不等值，模拟手绘线的轻微抖动（比滤镜便宜得多）。
+     ::before 再补一圈细线，像同一张版上描了第二道墨。
+     ------------------------------------------------------------ */
+  .ac-panel {
+    @apply relative border-2 border-ink bg-rose-200 shadow-soft;
+    border-radius: 16px 12px 15px 11px / 11px 16px 12px 15px;
+  }
+  .ac-panel::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    pointer-events: none;
+    border: 1.5px solid rgba(19, 42, 51, 0.26);
+    border-radius: 13px 9px 12px 8px / 8px 13px 9px 12px;
+  }
+
+  /* 小标签：深玫红，像手写旁注 */
+  .ac-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.16em] text-line;
+  }
+
+  /* ------------------------------------------------------------
+     按钮：墨青黑实底 + 奶油字 + 硬边印影。
+     hover 加深底色，按下把印影"按平"——像盖章。
+     ------------------------------------------------------------ */
+  .mech-btn {
+    @apply inline-flex items-center justify-center rounded-xl border-2 border-ink bg-ink px-3 py-2 text-[11px] font-semibold text-cream shadow-knob;
+    transition:
+      background-color 0.25s ease,
+      border-color 0.25s ease,
+      color 0.25s ease,
+      box-shadow 0.15s ease,
+      transform 0.15s ease;
+  }
+  .mech-btn:hover:not(:disabled) {
+    @apply border-ink-deep bg-ink-deep;
+  }
+  .mech-btn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 0 0 0 rgba(19, 42, 51, 0);
+  }
+  /* 激活态：奶油黄底 + 墨青黑字（与常态反相，像按下后亮起的指示灯） */
+  .mech-btn.is-active {
+    @apply border-ink bg-cream text-ink;
+  }
+  .mech-btn.is-active:hover:not(:disabled) {
+    @apply bg-cream-light text-ink;
+  }
+  .mech-btn:disabled {
+    @apply cursor-not-allowed opacity-40;
+  }
+
+  /* ------------------------------------------------------------
+     进度条：轨道是奶油色浅槽，已播段墨青黑，滑钮墨青黑圆点。
+     已播百分比由行内 --p 传入。
+     ------------------------------------------------------------ */
+  .range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 18px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .range-slider:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .range-slider::-webkit-slider-runnable-track {
+    height: 5px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      #132a33 0%,
+      #132a33 var(--p, 0%),
+      #f5e6a8 var(--p, 0%),
+      #f5e6a8 100%
+    );
+  }
+  .range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    margin-top: -5px;
+    border-radius: 999px;
+    background: #132a33;
+    box-shadow: 0 0 0 2px #fde1ec;
+  }
+  .range-slider::-moz-range-track {
+    height: 5px;
+    border-radius: 999px;
+    background: #f5e6a8;
+  }
+  .range-slider::-moz-range-progress {
+    height: 5px;
+    border-radius: 999px;
+    background: #132a33;
+  }
+  .range-slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    border: 2px solid #fde1ec;
+    border-radius: 999px;
+    background: #132a33;
+  }
+
+  /* ------------------------------------------------------------
+     标题的手绘记号笔：奶油黄一笔刷在字后面，模拟马克笔划重点。
+     只用于页眉主标题，不滥用。
+     ------------------------------------------------------------ */
+  .hd-marker {
+    background-image: linear-gradient(
+      180deg,
+      transparent 58%,
+      rgba(245, 230, 168, 0.85) 58%,
+      rgba(245, 230, 168, 0.85) 94%,
+      transparent 94%
+    );
+    padding: 0 0.12em;
+  }
+}
