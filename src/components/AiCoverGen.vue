@@ -76,7 +76,11 @@ async function generate() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: title.value.trim(), prompt: prompt.value.trim() }),
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    // 静态部署（如 GitHub Pages）没有后端，404 会被 Pages 兜成 HTML，单独给个可读提示
+    if (!res.ok) {
+      if (res.status === 404 || res.status === 405) throw new Error('NO_BACKEND')
+      throw new Error(`HTTP ${res.status}`)
+    }
 
     const type = res.headers.get('content-type') || ''
     let raw = ''
@@ -93,7 +97,11 @@ async function generate() {
     circleSrc.value = await cropToCircle(raw, 512)
     note.value = 'AI 生成 · 已圆形裁切'
   } catch (err) {
-    error.value = `生成失败：${err?.message || err}（可改用「本地生成」兜底）`
+    const msg = err?.message || String(err)
+    error.value =
+      msg === 'NO_BACKEND'
+        ? '当前站点是静态部署，没有接入 AI 后端；点「本地生成」即可用程序化封面（效果同样可入架）。'
+        : `生成失败：${msg}（可改用「本地生成」兜底）`
   } finally {
     loading.value = false
   }

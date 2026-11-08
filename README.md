@@ -6,6 +6,12 @@
 > 核心理念：**换歌 = 更换黑胶唱片 / 更换磁带**，而不是点一下列表就切歌。
 > 黑胶模式与磁带模式共用同一份音频状态，通过拨动开关整机切换，切换时音乐不断。
 
+[**▶ 在线演示**](https://msmlwdzh.github.io/retro-music-player/) ·
+[![Deploy to GitHub Pages](https://github.com/msmlwdzh/retro-music-player/actions/workflows/deploy.yml/badge.svg)](https://github.com/msmlwdzh/retro-music-player/actions/workflows/deploy.yml)
+
+> 演示站是纯静态托管，AI 封面接口没有后端可调；点弹窗里的「本地生成」走程序化封面，
+> 同样能完整走通「生成 → 裁圆 → 入架」链路。
+
 ## 视觉风格：手绘丝网印海报（Hand-drawn Screenprint）
 
 > **品红作地，墨青作骨，奶油黄作星环**——整页像一张丝网印的复古科幻海报。
@@ -36,6 +42,20 @@ npm run gen:audio   # 可选：重新合成内置演示 BGM（需要先装 Pytho
 npm run dev         # http://localhost:5173
 npm run build
 ```
+
+---
+
+## 部署（GitHub Pages）
+
+纯静态产物，推 `main` 由 `.github/workflows/deploy.yml` 自动构建发布
+（`configure-pages` → `upload-pages-artifact` → `deploy-pages`）。
+
+- Pages 的 Source 需为 **GitHub Actions**（本仓库已配置），也可在 Actions 页手动 `Run workflow`
+- 访问地址：<https://msmlwdzh.github.io/retro-music-player/>
+- 子路径零配置：`vite.config.js` 用 `base: './'`，音源由 `audioControl.js` 按
+  `document.baseURI` 解析，所以部署在 `/<repo>/` 下不会资源 / 音频 404
+- 静态站没有后端，AI 封面接口不可用；弹窗会提示并可用「本地生成」兜底
+- 想换自定义域名：Settings → Pages → Custom domain，无需改构建配置
 
 ---
 
